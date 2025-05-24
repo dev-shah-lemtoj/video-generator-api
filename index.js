@@ -5,6 +5,7 @@ const cors = require("cors");
 require("dotenv").config();
 const path = require("path");
 const configRoutes = require('./routes/configRoutes');
+const layoutRoutes = require('./routes/layoutRoutes')
 // Import the database connection function
 const connectDB = require("./config/db");
 
@@ -41,7 +42,7 @@ const adminRoutes = require('./routes/configRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/admin', configRoutes);
-
+app.use('/api', layoutRoutes);
 // Start server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
