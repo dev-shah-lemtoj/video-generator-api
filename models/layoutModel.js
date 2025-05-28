@@ -6,6 +6,11 @@ const layoutSchema = new mongoose.Schema({
     type: String,
     required: true, // Make this field required
   },
+  siteTitle: {
+    type: String,
+    required: true, // Make this field required
+    trim: true,
+  },
 }, {
   timestamps: true, // Automatically manage createdAt and updatedAt fields
 });

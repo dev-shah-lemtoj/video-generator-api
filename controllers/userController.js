@@ -20,11 +20,23 @@ const addUser = async (req, res) => {
         return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Save user
-    const newUser = new User({ name, email, password });
-    await newUser.save();
+    try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already registered' });
+        }
 
-    res.status(201).json({ message: 'User added successfully' });
+        const userCount = await User.countDocuments();
+        // const roleId = userCount === 0 ? 1 : 2;
+        const roleId = req.body.roleId || (userCount === 0 ? 1 : 2);
+
+        const newUser = new User({ name, email, password, roleId });
+        await newUser.save();
+
+        res.status(201).json({ message: 'User added successfully', roleId });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 };
 
 module.exports = { getAllUsers,addUser };
