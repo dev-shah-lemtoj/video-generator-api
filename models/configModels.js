@@ -8,8 +8,7 @@ const siteConfigSchema = new mongoose.Schema({
 
 const apiConfigSchema = new mongoose.Schema({
   apiSecretKey: String,
-  siteId: String,
-  mediaId: String,
+  siteId: [String],
 }, { collection: 'apiConfigs' });
 
 const SiteConfig = mongoose.model('SiteConfig', siteConfigSchema);

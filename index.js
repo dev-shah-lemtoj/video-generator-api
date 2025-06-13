@@ -19,6 +19,19 @@ app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
 app.use(flash());
 
 
+// Allow frontend on port 8000 to make requests
+app.use(cors({
+  origin: 'http://localhost:8000',
+  credentials: true
+}));
+
+// Allow static files under /uploads to be fetched with CORS
+app.use('/uploads', cors({
+  origin: 'http://localhost:8000',
+  credentials: true
+}), express.static('uploads'));
+
+
 // Session Middleware
 app.use(session({
     secret: process.env.SESSION_SECRET,

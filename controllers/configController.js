@@ -38,15 +38,28 @@ exports.getApiConfig = async (req, res) => {
 };
 
 exports.saveApiConfig = async (req, res) => {
-  const { apiSecretKey, siteId, mediaId } = req.body;
+  try {
+    let { apiSecretKey, siteId } = req.body;
 
-  let config = await ApiConfig.findOne({});
-  if (!config) config = new ApiConfig();
+    // Ensure siteId is always an array
+    if (!siteId) {
+      siteId = [];
+    } else if (!Array.isArray(siteId)) {
+      siteId = [siteId];
+    }
 
-  config.apiSecretKey = apiSecretKey;
-  config.siteId = siteId;
-  config.mediaId = mediaId;
+    // Retrieve or create new config
+    let config = await ApiConfig.findOne({});
+    if (!config) config = new ApiConfig();
 
-  await config.save();
-  res.json({ status: 'success', message: 'API config saved', config });
+    config.apiSecretKey = apiSecretKey;
+    config.siteId = siteId;  // Expecting array for siteId field
+
+    await config.save();
+
+    res.json({ status: 'success', message: 'API config saved', config });
+  } catch (error) {
+    console.error('Error saving API config:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to save API config' });
+  }
 };
