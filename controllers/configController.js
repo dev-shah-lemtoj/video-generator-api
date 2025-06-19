@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { SiteConfig, ApiConfig } = require('../models/configModels');
 const path = require('path');
 
@@ -7,7 +8,7 @@ exports.getSiteConfig = async (req, res) => {
 };
 
 exports.saveSiteConfig = async (req, res) => {
-  const { siteTitle } = req.body;
+  const { siteTitle, removeSiteLogo, removeSiteFavicon } = req.body;
   const files = req.files || {};
 
   const siteLogoFile = files.siteLogo?.[0];
@@ -16,13 +17,37 @@ exports.saveSiteConfig = async (req, res) => {
   let config = await SiteConfig.findOne({});
   if (!config) config = new SiteConfig();
 
+  // Set site title
   config.siteTitle = siteTitle;
 
+  // Helper to delete a file from disk
+  const deleteFile = (filePath) => {
+    if (!filePath) return;
+    const fullPath = path.join(__dirname, '..', 'public', filePath);
+    fs.unlink(fullPath, (err) => {
+      if (err) console.warn(`File delete failed: ${fullPath}`, err.message);
+    });
+  };
+
+  // Delete existing logo if requested
+  if (removeSiteLogo === 'true' && config.siteLogo) {
+    deleteFile(config.siteLogo);
+    config.siteLogo = undefined;
+  }
+
+  // Delete existing favicon if requested
+  if (removeSiteFavicon === 'true' && config.siteFavicon) {
+    deleteFile(config.siteFavicon);
+    config.siteFavicon = undefined;
+  }
+
+  // Save new logo if uploaded
   if (siteLogoFile) {
     const logoPath = `/uploads/${siteLogoFile.filename}`;
     config.siteLogo = logoPath;
   }
 
+  // Save new favicon if uploaded
   if (siteFaviconFile) {
     const faviconPath = `/uploads/${siteFaviconFile.filename}`;
     config.siteFavicon = faviconPath;
@@ -31,6 +56,7 @@ exports.saveSiteConfig = async (req, res) => {
   await config.save();
   res.json({ status: 'success', message: 'Site config saved', config });
 };
+
 
 exports.getApiConfig = async (req, res) => {
   const config = await ApiConfig.findOne({}).lean();
