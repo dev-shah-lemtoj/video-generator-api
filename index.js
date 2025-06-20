@@ -2,6 +2,7 @@ const express = require("express");
 const session = require("express-session");
 const flash = require("connect-flash");
 const cors = require("cors");
+const MongoStore = require('connect-mongo');
 require("dotenv").config();
 const path = require("path");
 const configRoutes = require('./routes/configRoutes');
@@ -33,10 +34,27 @@ app.use('/uploads', cors({
 
 
 // Session Middleware
+// app.use(session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: true,
+// }));
+
+
 app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
+  secret: process.env.SESSION_SECRET || 'nodedemo', // use env if possible
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60 // 1 day (optional but good to be explicit)
+  }),
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    sameSite: 'lax', // prevents CSRF but allows normal cookies in frontend/backend dev
+    secure: process.env.NODE_ENV === 'production' // only true on HTTPS
+  }
 }));
 
 // Connect to MongoDB
