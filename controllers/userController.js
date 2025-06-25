@@ -97,21 +97,27 @@ const editUser = async (req, res) => {
 
 const updateUserSites = async (req, res) => {
   const userId = req.params.id;
-  const { siteId } = req.body;
+  const { sites } = req.body;
 
-  if (!siteId || !Array.isArray(siteId)) {
-    return res.status(400).json({ error: 'siteId must be an array' });
+  if (!Array.isArray(sites)) {
+    return res.status(400).json({ error: 'sites must be an array of { name, id }' });
   }
 
   try {
-    const user = await User.findByIdAndUpdate(userId, { siteId }, { new: true });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { siteId: sites }, // Assuming you're storing this in a `siteId` field
+      { new: true }
+    );
+
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    res.status(200).json({ message: 'Site IDs updated successfully', user });
+    res.status(200).json({ message: 'Sites updated successfully', user });
   } catch (error) {
-    console.error('Error updating siteId:', error);
+    console.error('Error updating sites:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
+
 
 module.exports = { getAllUsers, addUser, deleteUser, editUser,updateUserSites };
