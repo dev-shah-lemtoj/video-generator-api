@@ -14,7 +14,7 @@ const addUser = async (req, res) => {
     return res.status(400).json({ error: 'Request body is missing' });
   }
 
-  const { name, email, password, roleId, siteId = null } = req.body;
+  const { name, email, password, roleId, siteId = [] } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -65,7 +65,7 @@ const editUser = async (req, res) => {
     return res.status(400).json({ error: 'User ID is required' });
   }
 
-  const { name, email, password, siteId = null } = req.body;
+  const { name, email, password, siteId = [] } = req.body;
 
   if (!name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
@@ -95,4 +95,23 @@ const editUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, addUser, deleteUser, editUser };
+const updateUserSites = async (req, res) => {
+  const userId = req.params.id;
+  const { siteId } = req.body;
+
+  if (!siteId || !Array.isArray(siteId)) {
+    return res.status(400).json({ error: 'siteId must be an array' });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(userId, { siteId }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.status(200).json({ message: 'Site IDs updated successfully', user });
+  } catch (error) {
+    console.error('Error updating siteId:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+module.exports = { getAllUsers, addUser, deleteUser, editUser,updateUserSites };
