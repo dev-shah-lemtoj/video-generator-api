@@ -22,13 +22,13 @@ app.use(flash());
 
 // Allow frontend on port 8000 to make requests
 app.use(cors({
-  origin: 'http://localhost:8000',
+  origin: 'http://103.154.233.39:8000',
   credentials: true
 }));
 
 // Allow static files under /uploads to be fetched with CORS
 app.use('/uploads', cors({
-  origin: 'http://localhost:8000',
+  origin: 'http://103.154.233.39:8000',
   credentials: true
 }), express.static('uploads'));
 
