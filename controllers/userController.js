@@ -124,5 +124,29 @@ const updateUserSites = async (req, res) => {
   }
 };
 
+const updateUserRole = async (req, res) => {
+  const userId = req.params.id;
+  const { roleId } = req.body;
 
-module.exports = { getAllUsers, addUser, deleteUser, editUser,updateUserSites };
+  if (![1, 2].includes(roleId)) {
+    return res.status(400).json({ error: 'Invalid roleId. Must be 1 (Super Admin) or 2 (User).' });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { roleId },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.status(200).json({ message: 'Role updated successfully', user });
+  } catch (error) {
+    console.error('Error updating role:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+
+module.exports = { getAllUsers, addUser, deleteUser, editUser,updateUserSites,updateUserRole};
