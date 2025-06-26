@@ -2,7 +2,7 @@ const User = require('../models/UserModel');
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, '-password'); // Exclude password
+    const users = await User.find({}); // Exclude password
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
@@ -60,12 +60,11 @@ const deleteUser = async (req, res) => {
 
 const editUser = async (req, res) => {
   const userId = req.params.id;
+  const { name, email, password, siteId = [] } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: 'User ID is required' });
   }
-
-  const { name, email, password, siteId = [] } = req.body;
 
   if (!name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
@@ -77,23 +76,29 @@ const editUser = async (req, res) => {
       return res.status(400).json({ error: 'Email already in use by another user' });
     }
 
-    const updateData = { name, email, siteId };
-
-    if (password && password.trim() !== '') {
-      updateData.password = password;
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
-
-    if (!updatedUser) {
+    const user = await User.findById(userId);
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    user.name = name;
+    user.email = email;
+    user.siteId = siteId;
+
+    if (password && password.trim() !== '') {
+      user.password = password;
+      user.markModified('password'); // ✅ Ensures pre-save hook hashes the password
+    }
+
+    await user.save(); // ✅ Triggers pre('save') hook
+
     res.status(200).json({ message: 'User updated successfully' });
   } catch (err) {
+    console.error('Edit User Error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };
+
 
 const updateUserSites = async (req, res) => {
   const userId = req.params.id;
