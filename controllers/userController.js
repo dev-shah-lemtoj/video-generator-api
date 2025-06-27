@@ -29,7 +29,15 @@ const addUser = async (req, res) => {
     const userCount = await User.countDocuments();
     const assignedRoleId = roleId || (userCount === 0 ? 1 : 2);
 
-    const newUser = new User({ name, email, password, roleId: assignedRoleId, siteId });
+    const newUser = new User({
+      name,
+      email,
+      password,
+      siteId,
+      roleId: assignedRoleId,
+      status: 0 // <-- explicitly set status to inactive
+    });
+
     await newUser.save();
 
     res.status(201).json({ message: 'User added successfully', roleId: assignedRoleId });
@@ -37,6 +45,7 @@ const addUser = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 const deleteUser = async (req, res) => {
   const userId = req.params.id;
@@ -60,7 +69,7 @@ const deleteUser = async (req, res) => {
 
 const editUser = async (req, res) => {
   const userId = req.params.id;
-  const { name, email, password, siteId = [] } = req.body;
+  const { name, email, password, siteId = [], roleId, status } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: 'User ID is required' });
@@ -85,12 +94,20 @@ const editUser = async (req, res) => {
     user.email = email;
     user.siteId = siteId;
 
-    if (password && password.trim() !== '') {
-      user.password = password;
-      user.markModified('password'); // ✅ Ensures pre-save hook hashes the password
+    if (roleId !== undefined) {
+      user.roleId = roleId;
     }
 
-    await user.save(); // ✅ Triggers pre('save') hook
+    if (status !== undefined) {
+      user.status = status;
+    }
+
+    if (password && password.trim() !== '') {
+      user.password = password;
+      user.markModified('password');
+    }
+
+    await user.save();
 
     res.status(200).json({ message: 'User updated successfully' });
   } catch (err) {
@@ -98,6 +115,7 @@ const editUser = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
 
 
 const updateUserSites = async (req, res) => {

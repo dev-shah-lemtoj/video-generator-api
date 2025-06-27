@@ -11,7 +11,12 @@ const userSchema = new mongoose.Schema({
       name: { type: String, default: null },
       id: { type: String, default: null },
     }
-  ]
+  ],
+  status: {
+    type: Number,
+    enum: [0, 1], // 0 = Inactive, 1 = Active
+    default: 0 // <-- Set default to Inactive
+  }
 });
 
 userSchema.pre('save', async function (next) {
