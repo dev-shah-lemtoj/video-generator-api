@@ -6,6 +6,7 @@ const MongoStore = require('connect-mongo');
 require("dotenv").config();
 const path = require("path");
 const configRoutes = require('./routes/configRoutes');
+const roleRoutes = require('./routes/roleRoutes');
 const layoutRoutes = require('./routes/layoutRoutes')
 // Import the database connection function
 const connectDB = require("./config/db");
@@ -72,6 +73,7 @@ const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/configRoutes');
 
 app.use('/api/users', userRoutes);
+app.use('/api/roles', roleRoutes);
 app.use('/admin', configRoutes);
 app.use('/api', layoutRoutes);
 // Start server
