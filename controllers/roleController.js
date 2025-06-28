@@ -56,3 +56,23 @@ exports.deleteRole = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+exports.getRoleById = async (req, res) => {
+  try {
+    const role = await Role.findById(req.params.id);
+    if (!role) return res.status(404).json({ error: 'Role not found' });
+    res.json(role);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch role' });
+  }
+};
+
+exports.updatePermissions = async (req, res) => {
+  try {
+    const { permissions } = req.body;
+    await Role.findByIdAndUpdate(req.params.id, { permissions });
+    res.json({ message: 'Permissions updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update permissions' });
+  }
+};
