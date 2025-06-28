@@ -3,7 +3,7 @@ const Role = require('../models/roleModel.js');
 // GET /api/roles
 exports.getAllRoles = async (req, res) => {
   try {
-    const roles = await Role.find().sort({ createdAt: -1 });
+    const roles = await Role.find().sort({ createdAt: 1 });
     res.json(roles);
   } catch (err) {
     res.status(500).json({ error: 'Server Error' });
@@ -41,13 +41,18 @@ exports.updateRole = async (req, res) => {
 
 // DELETE /api/roles/:id
 exports.deleteRole = async (req, res) => {
-  const { id } = req.params;
+  const roleId = req.params.id;
   try {
-    const deleted = await Role.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ error: 'Role not found' });
+    const role = await Role.findById(roleId);
+    if (!role) return res.status(404).json({ error: 'Role not found' });
 
-    res.json({ message: 'Role deleted' });
+    if (['Super Admin', 'User'].includes(role.name)) {
+      return res.status(403).json({ error: 'This role cannot be deleted' });
+    }
+
+    await role.deleteOne();
+    res.status(200).json({ message: 'Role deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Server Error' });
+    res.status(500).json({ error: 'Server error' });
   }
 };

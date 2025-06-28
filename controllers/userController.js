@@ -1,5 +1,5 @@
 const User = require('../models/UserModel');
-
+const Role = require('../models/roleModel');
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find({}); // Exclude password
@@ -27,7 +27,16 @@ const addUser = async (req, res) => {
     }
 
     const userCount = await User.countDocuments();
-    const assignedRoleId = roleId || (userCount === 0 ? 1 : 2);
+    let assignedRoleId = roleId;
+
+    if (!assignedRoleId) {
+      const defaultRoleName = userCount === 0 ? 'User' : 'Super Admin';
+      const defaultRole = await Role.findOne({ name: defaultRoleName });
+      if (!defaultRole) {
+        return res.status(400).json({ error: `"${defaultRoleName}" role not found in system` });
+      }
+      assignedRoleId = defaultRole._id;
+    }
 
     const newUser = new User({
       name,
@@ -35,7 +44,7 @@ const addUser = async (req, res) => {
       password,
       siteId,
       roleId: assignedRoleId,
-      status: 0 // <-- explicitly set status to inactive
+      status: 0, // inactive
     });
 
     await newUser.save();
@@ -45,7 +54,6 @@ const addUser = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 const deleteUser = async (req, res) => {
   const userId = req.params.id;
@@ -71,13 +79,8 @@ const editUser = async (req, res) => {
   const userId = req.params.id;
   const { name, email, password, siteId = [], roleId, status } = req.body;
 
-  if (!userId) {
-    return res.status(400).json({ error: 'User ID is required' });
-  }
-
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required' });
-  }
+  if (!userId) return res.status(400).json({ error: 'User ID is required' });
+  if (!name || !email) return res.status(400).json({ error: 'Name and email are required' });
 
   try {
     const existingUser = await User.findOne({ email, _id: { $ne: userId } });
@@ -86,15 +89,15 @@ const editUser = async (req, res) => {
     }
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
     user.name = name;
     user.email = email;
     user.siteId = siteId;
 
     if (roleId !== undefined) {
+      const roleExists = await Role.findById(roleId);
+      if (!roleExists) return res.status(400).json({ error: 'Invalid role ID' });
       user.roleId = roleId;
     }
 
@@ -108,7 +111,6 @@ const editUser = async (req, res) => {
     }
 
     await user.save();
-
     res.status(200).json({ message: 'User updated successfully' });
   } catch (err) {
     console.error('Edit User Error:', err);
@@ -146,18 +148,27 @@ const updateUserRole = async (req, res) => {
   const userId = req.params.id;
   const { roleId } = req.body;
 
-  if (![1, 2].includes(roleId)) {
-    return res.status(400).json({ error: 'Invalid roleId. Must be 1 (Super Admin) or 2 (User).' });
+  if (!roleId) {
+    return res.status(400).json({ error: 'roleId is required' });
   }
 
   try {
+    // Check if the role exists in the roles collection
+    const role = await Role.findById(roleId);
+    if (!role) {
+      return res.status(400).json({ error: 'Invalid roleId. Role does not exist.' });
+    }
+
+    // Update user with valid roleId
     const user = await User.findByIdAndUpdate(
       userId,
       { roleId },
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     res.status(200).json({ message: 'Role updated successfully', user });
   } catch (error) {

@@ -5,7 +5,15 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   password: { type: String, required: true },
-  roleId: { type: Number },
+roleId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Role',
+  required: true,
+  default: async function () {
+    const role = await mongoose.model('Role').findOne({ name: 'User' });
+    return role?._id;
+  }
+},
   siteId: [
     {
       name: { type: String, default: null },
