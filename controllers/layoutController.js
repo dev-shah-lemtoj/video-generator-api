@@ -24,7 +24,7 @@ exports.getLayouts = async (req, res) => {
 
     const filter = userId ? { userId } : {}; // if userId exists, filter by it
 
-    const layouts = await Layout.find(filter).sort({ createdAt: -1 });
+    const layouts = await Layout.find(filter).sort({ createdAt:1 });
     res.status(200).json(layouts);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving layouts', error });
