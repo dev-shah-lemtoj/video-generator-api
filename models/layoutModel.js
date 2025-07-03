@@ -11,6 +11,11 @@ const layoutSchema = new mongoose.Schema({
     required: true, // Make this field required
     trim: true,
   },
+    userId: {
+    type: mongoose.Schema.Types.ObjectId, // or just String if you're passing it that way
+    required: true,
+    ref: 'User' // optional: links to User model
+  }
 }, {
   timestamps: true, // Automatically manage createdAt and updatedAt fields
 });

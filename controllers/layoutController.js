@@ -2,10 +2,14 @@ const Layout = require('../models/layoutModel'); // Adjust the path as necessary
 
 // Controller to save layout
 exports.saveLayout = async (req, res) => {
-  const { layout, siteTitle } = req.body;
+  const { layout, siteTitle, userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: 'Missing userId' });
+  }
 
   try {
-    const newLayout = new Layout({ layout, siteTitle });
+    const newLayout = new Layout({ layout, siteTitle, userId });
     await newLayout.save();
     res.status(200).json({ message: 'Layout saved successfully!' });
   } catch (error) {
@@ -16,7 +20,11 @@ exports.saveLayout = async (req, res) => {
 // Controller to get all layouts
 exports.getLayouts = async (req, res) => {
   try {
-    const layouts = await Layout.find();
+    const { userId } = req.query;
+
+    const filter = userId ? { userId } : {}; // if userId exists, filter by it
+
+    const layouts = await Layout.find(filter).sort({ createdAt: -1 });
     res.status(200).json(layouts);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving layouts', error });
