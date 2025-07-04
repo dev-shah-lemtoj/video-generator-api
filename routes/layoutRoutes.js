@@ -4,7 +4,7 @@ const layoutController = require('../controllers/layoutController');
 
 // Define the route for saving layout
 router.post('/save-layout', layoutController.saveLayout);
-
+router.get('/layouts/count/:userId', layoutController.getLayoutCountByUser);
 // Define the route for getting layouts
 router.get('/layouts', layoutController.getLayouts); // New route to get layouts
 

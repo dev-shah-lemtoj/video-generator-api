@@ -1,5 +1,6 @@
 const User = require('../models/UserModel');
 const Role = require('../models/roleModel');
+const Layout = require('../models/layoutModel');
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find({}); // Exclude password
@@ -55,25 +56,24 @@ const addUser = async (req, res) => {
   }
 };
 
+// DELETE /api/users/:id
 const deleteUser = async (req, res) => {
-  const userId = req.params.id;
-
-  if (!userId) {
-    return res.status(400).json({ error: 'User ID is required' });
-  }
-
   try {
-    const deletedUser = await User.findByIdAndDelete(userId);
+    const userId = req.params.id;
 
-    if (!deletedUser) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    // Delete layouts created by this user
+    await Layout.deleteMany({ userId });
 
-    return res.status(200).json({ message: 'User deleted successfully' });
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: 'User and layouts deleted' });
   } catch (err) {
-    return res.status(500).json({ error: 'Server error' });
+    console.error("Delete error:", err);
+    res.status(500).json({ error: 'Failed to delete user and layouts' });
   }
 };
+
 
 const editUser = async (req, res) => {
   const userId = req.params.id;

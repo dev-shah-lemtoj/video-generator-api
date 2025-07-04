@@ -86,3 +86,12 @@ exports.deleteLayoutById = async (req, res) => {
     res.status(500).json({ message: 'Error deleting layout', error });
   }
 };
+
+exports.getLayoutCountByUser = async (req, res) => {
+  try {
+    const count = await Layout.countDocuments({ userId: req.params.userId });
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ error: "Error fetching layout count" });
+  }
+};
