@@ -1,62 +1,65 @@
 const Site = require('../models/siteModel');
+const User = require('../models/UserModel');
 
 // GET all sites
-exports.getAllSites = async (req, res) => {
+const getAllSites = async (req, res) => {
   try {
-    const sites = await Site.find();
+    const sites = await Site.find().populate('user', 'name');
     res.json(sites);
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({ error: 'Failed to fetch sites' });
   }
 };
 
-// CREATE new site
-exports.createSite = async (req, res) => {
-  const { name, siteId } = req.body;
-  if (!name || !siteId) {
-    return res.status(400).json({ error: 'Name and Site ID are required' });
+// ADD a site
+const addSite = async (req, res) => {
+  const { name, siteId, user } = req.body;
+  if (!name || !siteId || !user) {
+    return res.status(400).json({ error: 'name, siteId, and user are required' });
   }
 
   try {
-    const site = new Site({ name, siteId });
-    await site.save();
-    res.status(201).json(site);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create site' });
+    const userExists = await User.findById(user);
+    if (!userExists) return res.status(404).json({ error: 'User not found' });
+
+    const newSite = new Site({ name, siteId, user });
+    await newSite.save();
+
+    res.status(201).json({ message: 'Site added successfully', site: newSite });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add site' });
   }
 };
 
-// UPDATE site by ID
-exports.updateSite = async (req, res) => {
-  const { name, siteId } = req.body;
-  if (!name || !siteId) {
-    return res.status(400).json({ error: 'Name and Site ID are required' });
-  }
+// UPDATE site
+const updateSite = async (req, res) => {
+  const { name, siteId, user } = req.body;
 
   try {
     const updated = await Site.findByIdAndUpdate(
       req.params.id,
-      { name, siteId },
+      { name, siteId, user },
       { new: true }
     );
-    if (!updated) {
-      return res.status(404).json({ error: 'Site not found' });
-    }
-    res.json(updated);
-  } catch (error) {
+
+    if (!updated) return res.status(404).json({ error: 'Site not found' });
+
+    res.json({ message: 'Site updated successfully', site: updated });
+  } catch (err) {
     res.status(500).json({ error: 'Failed to update site' });
   }
 };
 
-// DELETE site by ID
-exports.deleteSite = async (req, res) => {
+// DELETE site
+const deleteSite = async (req, res) => {
   try {
-    const deletedSite = await Site.findByIdAndDelete(req.params.id);
-    if (!deletedSite) {
-      return res.status(404).json({ error: 'Site not found' });
-    }
-    res.json({ success: true });
-  } catch (error) {
+    const deleted = await Site.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Site not found' });
+
+    res.json({ message: 'Site deleted successfully' });
+  } catch (err) {
     res.status(500).json({ error: 'Failed to delete site' });
   }
 };
+
+module.exports = { getAllSites, addSite, updateSite, deleteSite };
