@@ -5,9 +5,11 @@ const cors = require("cors");
 const MongoStore = require('connect-mongo');
 require("dotenv").config();
 const path = require("path");
+const userRoutes = require('./routes/userRoutes');
 const configRoutes = require('./routes/configRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const layoutRoutes = require('./routes/layoutRoutes')
+const siteRoutes = require('./routes/siteRoutes');
 // Import the database connection function
 const connectDB = require("./config/db");
 
@@ -69,13 +71,14 @@ app.set("views", path.join(__dirname, "views"));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static('uploads'));
 // Routes
-const userRoutes = require('./routes/userRoutes');
-const adminRoutes = require('./routes/configRoutes');
+
 
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/admin', configRoutes);
 app.use('/api', layoutRoutes);
+app.use('/api/sites', siteRoutes);
+
 // Start server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
