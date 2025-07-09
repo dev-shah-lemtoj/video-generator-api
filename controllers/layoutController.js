@@ -11,7 +11,12 @@ exports.saveLayout = async (req, res) => {
   try {
     const newLayout = new Layout({ layout, siteTitle, userId });
     await newLayout.save();
-    res.status(200).json({ message: 'Layout saved successfully!' });
+    res.status(200).json({
+      message: 'Layout saved successfully!',
+      _id: newLayout._id, // ✅ Return ID here
+      layout: newLayout.layout,
+      siteTitle: newLayout.siteTitle,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error saving layout', error });
   }
