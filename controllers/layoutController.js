@@ -1,35 +1,53 @@
-const Layout = require('../models/layoutModel'); // Adjust the path as necessary
+const mongoose = require('mongoose');
+const Layout = require('../models/layoutModel');
 
 // Controller to save layout
 exports.saveLayout = async (req, res) => {
-  const { layout, siteTitle, userId } = req.body;
+  const { layout, siteTitle, userId, siteId } = req.body;
 
   if (!userId) {
     return res.status(400).json({ message: 'Missing userId' });
   }
 
+  if (!siteId) {
+    return res.status(400).json({ message: 'Missing siteId' });
+  }
+
   try {
-    const newLayout = new Layout({ layout, siteTitle, userId });
+    const newLayout = new Layout({
+      layout,
+      siteTitle,
+      userId,
+      siteId // ensure it's an ObjectId
+    });
+
     await newLayout.save();
+
     res.status(200).json({
       message: 'Layout saved successfully!',
-      _id: newLayout._id, // ✅ Return ID here
+      _id: newLayout._id,
       layout: newLayout.layout,
       siteTitle: newLayout.siteTitle,
+      siteId: newLayout.siteId,
     });
   } catch (error) {
     res.status(500).json({ message: 'Error saving layout', error });
   }
 };
 
-// Controller to get all layouts
+// Controller to get all layouts (optionally filtered by userId or siteId)
 exports.getLayouts = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const { userId, siteId } = req.query;
 
-    const filter = userId ? { userId } : {}; // if userId exists, filter by it
+    const filter = {};
+    if (userId) filter.userId = userId;
+    if (siteId) filter.siteId = siteId;
 
-    const layouts = await Layout.find(filter).sort({ createdAt:1 });
+    const layouts = await Layout.find(filter)
+      .populate('siteId') // include site details
+      .sort({ createdAt: 1 });
+
     res.status(200).json(layouts);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving layouts', error });
@@ -41,7 +59,7 @@ exports.getLayoutById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const layout = await Layout.findById(id);
+    const layout = await Layout.findById(id).populate('siteId');
 
     if (!layout) {
       return res.status(404).json({ message: 'Layout not found' });
@@ -58,18 +76,23 @@ exports.updateLayoutById = async (req, res) => {
   const { id } = req.params;
   const { layout, siteTitle } = req.body;
 
+  const updateData = { layout, siteTitle }; // ✅ No siteId here
+
   try {
     const updatedLayout = await Layout.findByIdAndUpdate(
       id,
-      { layout, siteTitle },
+      updateData,
       { new: true, runValidators: true }
-    );
+    ).populate('siteId');
 
     if (!updatedLayout) {
       return res.status(404).json({ message: 'Layout not found' });
     }
 
-    res.status(200).json({ message: 'Layout updated successfully', updatedLayout });
+    res.status(200).json({
+      message: 'Layout updated successfully',
+      updatedLayout
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error updating layout', error });
   }
@@ -92,11 +115,12 @@ exports.deleteLayoutById = async (req, res) => {
   }
 };
 
+// Controller to count layouts by user
 exports.getLayoutCountByUser = async (req, res) => {
   try {
     const count = await Layout.countDocuments({ userId: req.params.userId });
     res.json({ count });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({ error: "Error fetching layout count" });
   }
 };
