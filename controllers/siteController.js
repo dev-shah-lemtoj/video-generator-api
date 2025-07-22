@@ -4,10 +4,26 @@ const User = require('../models/UserModel');
 // GET all sites
 const getAllSites = async (req, res) => {
   try {
-    const sites = await Site.find().populate('user', 'name');
-    res.json(sites);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+
+    const query = search
+      ? { name: { $regex: search, $options: "i" } }
+      : {};
+
+    const [sites, total] = await Promise.all([
+      Site.find(query)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate('user', 'name')
+        .lean(),
+      Site.countDocuments(query)
+    ]);
+
+    res.json({ data: sites, total, page, limit });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch sites' });
+    res.status(500).json({ error: "Failed to fetch sites" });
   }
 };
 
