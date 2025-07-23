@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Site = require('../models/siteModel');
 const Layout = require('../models/layoutModel');
 
 // Controller to save layout
@@ -54,18 +55,22 @@ exports.getLayouts = async (req, res) => {
   }
 };
 
-// Controller to get layout by ID
 exports.getLayoutById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const layout = await Layout.findById(id).populate('siteId');
+    const layout = await Layout.findById(id);
+    if (!layout) return res.status(404).json({ message: 'Layout not found' });
 
-    if (!layout) {
-      return res.status(404).json({ message: 'Layout not found' });
-    }
+    // 👇 manually fetch Site info using the string siteId
+    const site = await Site.findOne({ siteId: layout.siteId });
+    if (!site) return res.status(404).json({ message: 'Site not found' });
 
-    res.status(200).json(layout);
+    // attach full site info to response
+    res.status(200).json({
+      ...layout.toObject(), // convert Mongoose doc to plain object
+      site // include site details
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving layout', error });
   }
