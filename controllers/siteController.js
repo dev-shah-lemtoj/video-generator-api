@@ -30,19 +30,29 @@ const getAllSites = async (req, res) => {
 // ADD a site
 const addSite = async (req, res) => {
   const { name, siteId, user } = req.body;
+
   if (!name || !siteId || !user) {
     return res.status(400).json({ error: 'name, siteId, and user are required' });
   }
 
   try {
     const userExists = await User.findById(user);
-    if (!userExists) return res.status(404).json({ error: 'User not found' });
+    if (!userExists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if this siteId already exists for this user
+    const existingSite = await Site.findOne({ siteId, user });
+    if (existingSite) {
+      return res.status(409).json({ error: 'Site already exists for this user' });
+    }
 
     const newSite = new Site({ name, siteId, user });
     await newSite.save();
 
     res.status(201).json({ message: 'Site added successfully', site: newSite });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to add site' });
   }
 };
