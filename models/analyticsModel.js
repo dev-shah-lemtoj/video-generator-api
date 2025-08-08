@@ -4,7 +4,7 @@ const analyticsSchema = new mongoose.Schema({
     siteName: { type: String, required: true },
     siteId: { type: String, required: true },
     embedId: { type: String, required: true },
-    videoId: { type: String, required: true },
+    videoId: String,
     eventType: { type: String, required: true },
     channel: String,
     category: String,
