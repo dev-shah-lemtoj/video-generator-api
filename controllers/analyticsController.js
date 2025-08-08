@@ -2,10 +2,18 @@ const Analytics = require('../models/analyticsModel');
 const geoip = require('geoip-lite');
 const UAParser = require('ua-parser-js');
 
+function getClientIp(req) {
+    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (ip.startsWith('::ffff:')) {
+        ip = ip.replace('::ffff:', '');
+    }
+    return ip;
+}
+
 // CREATE
 exports.createAnalytics = async (req, res) => {
     try {
-        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const ip = getClientIp(req);
         const geo = geoip.lookup(ip) || {};
         const parser = new UAParser(req.headers['user-agent']);
 
