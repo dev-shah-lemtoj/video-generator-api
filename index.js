@@ -10,6 +10,7 @@ const configRoutes = require('./routes/configRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const layoutRoutes = require('./routes/layoutRoutes')
 const siteRoutes = require('./routes/siteRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 // Import the database connection function
 const connectDB = require("./config/db");
 
@@ -80,7 +81,7 @@ app.use('/api/roles', roleRoutes);
 app.use('/admin', configRoutes);
 app.use('/api', layoutRoutes);
 app.use('/api/sites', siteRoutes);
-
+app.use('/api/analytics',analyticsRoutes)
 // Start server
 /* app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
