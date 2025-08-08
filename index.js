@@ -10,7 +10,6 @@ const configRoutes = require('./routes/configRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const layoutRoutes = require('./routes/layoutRoutes')
 const siteRoutes = require('./routes/siteRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
 // Import the database connection function
 const connectDB = require("./config/db");
 
@@ -18,21 +17,23 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: '*' })); // Allow all origins (for now)
-app.use(express.json());  // Parse JSON bodies
-app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));  // Parse JSON bodies
+app.use(express.urlencoded({ limit: '50mb', extended: true }));  // Parse URL-encoded bodies
 app.use(flash());
 
 
 // Allow frontend on port 8000 to make requests
 app.use(cors({
-  origin: 'http://103.154.233.39:8000',
-  credentials: true
+  origin: '*',           // ✅ allow all domains
+  credentials: false     // ❗ must be false if origin is '*'
 }));
+
+
 
 // Allow static files under /uploads to be fetched with CORS
 app.use('/uploads', cors({
-  origin: 'http://103.154.233.39:8000',
+  origin: 'https://guju-tech.com:8000',
   credentials: true
 }), express.static('uploads'));
 
@@ -79,8 +80,24 @@ app.use('/api/roles', roleRoutes);
 app.use('/admin', configRoutes);
 app.use('/api', layoutRoutes);
 app.use('/api/sites', siteRoutes);
-app.use('/api/analytics', analyticsRoutes);
+
 // Start server
-app.listen(port, () => {
+/* app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
+}); */
+
+
+const https = require('https');
+const fs = require('fs');
+const options = {
+  key: fs.readFileSync('/home/manc307/ssl/private/guju-tech.com.key'),
+  cert: fs.readFileSync('/home/manc307/ssl/cert/guju-tech.com.fullchain.crt') // ← combined .crt if needed
+};
+
+/* app.get('/', (req, res) => {
+  res.send('Hello from secure Node.js!');
+}); */
+
+https.createServer(options, app).listen(port, () => {
+  console.log('HTTPS server running on port ' + port);
 });
