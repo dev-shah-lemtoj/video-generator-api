@@ -38,9 +38,44 @@ exports.createAnalytics = async (req, res) => {
 // GET ALL (with filters)
 exports.getAllAnalytics = async (req, res) => {
     try {
-        const filters = { ...req.query }; 
-        const data = await Analytics.find(filters).sort({ createdAt: -1 }); // Newest → Oldest;
-        res.json(data);
+        // Pagination params
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Search param
+        const search = req.query.search ? req.query.search.trim() : "";
+
+        // Build filter
+        let filter = {};
+        if (search) {
+            filter = {
+                $or: [
+                    { siteName: { $regex: search, $options: "i" } },
+                    { widgetName: { $regex: search, $options: "i" } },
+                    { eventType: { $regex: search, $options: "i" } },
+                    { category: { $regex: search, $options: "i" } },
+                    { country: { $regex: search, $options: "i" } },
+                    { tags: { $regex: search, $options: "i" } }
+                ]
+            };
+        }
+
+        // Query with pagination
+        const [data, total] = await Promise.all([
+            Analytics.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            Analytics.countDocuments(filter)
+        ]);
+
+        res.json({
+            data,
+            total,
+            page,
+            limit
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
