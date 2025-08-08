@@ -12,6 +12,7 @@ const analyticsSchema = new mongoose.Schema({
     viewCount: { type: Number, default: 0 },
     userId: String,
     widgetName: String, // <-- Added widgetName
+    widgetId: String, // <-- Added widgetId
     device: String,
     platform: String,
     country: String,
