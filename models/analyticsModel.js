@@ -11,15 +11,14 @@ const analyticsSchema = new mongoose.Schema({
     tags: [String],
     viewCount: { type: Number, default: 0 },
     userId: String,
+    widgetName: String, // <-- Added widgetName
     device: String,
     platform: String,
     country: String,
     region: String,
     state: String,
     ipAddress: String,
-    lastViewedAt: Date,
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
+    lastViewedAt: Date
+}, { timestamps: true }); // Auto-created createdAt & updatedAt
 
 module.exports = mongoose.model('Analytics', analyticsSchema);

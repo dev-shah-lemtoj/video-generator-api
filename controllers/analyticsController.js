@@ -39,7 +39,7 @@ exports.createAnalytics = async (req, res) => {
 exports.getAllAnalytics = async (req, res) => {
     try {
         const filters = { ...req.query }; 
-        const data = await Analytics.find(filters);
+        const data = await Analytics.find(filters).sort({ createdAt: -1 }); // Newest → Oldest;
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
