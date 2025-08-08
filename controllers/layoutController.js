@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Site = require('../models/siteModel');
 const Layout = require('../models/layoutModel');
-
+const User = require('../models/UserModel');
 // Controller to save layout
 exports.saveLayout = async (req, res) => {
   const { layout, siteTitle, userId, siteId } = req.body;
@@ -66,10 +66,15 @@ exports.getLayoutById = async (req, res) => {
     const site = await Site.findOne({ siteId: layout.siteId });
     if (!site) return res.status(404).json({ message: 'Site not found' });
 
-    // attach full site info to response
+    // 👇 manually fetch User info using the string userId
+    const user = await User.findOne({ _id: layout.userId });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // attach full site & user info to response
     res.status(200).json({
       ...layout.toObject(), // convert Mongoose doc to plain object
-      site // include site details
+      site, // include site details
+      user  // include user details
     });
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving layout', error });
