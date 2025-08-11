@@ -170,9 +170,11 @@ exports.getCountByVideoId = async (req, res) => {
         const { search, startDate, endDate } = req.query;
 
         // Build filter
-        let filter = {};
+        let filter = {
+            videoId: { $ne: null} // Exclude null or empty videoId
+        };
 
-        // Search filter (similar to getAllAnalytics)
+        // Search filter
         if (search) {
             const trimmed = search.trim();
             filter.$or = [
