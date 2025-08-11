@@ -114,7 +114,6 @@ exports.deleteAnalytics = async (req, res) => {
     }
 };
 
-// SUMMARY: Total views by Embed ID with filters
 // SUMMARY: Total views by Embed ID + Widget ID with filters
 exports.getCountByEmbedId = async (req, res) => {
     try {
@@ -132,7 +131,8 @@ exports.getCountByEmbedId = async (req, res) => {
                 { eventType: { $regex: trimmed, $options: "i" } },
                 { category: { $regex: trimmed, $options: "i" } },
                 { country: { $regex: trimmed, $options: "i" } },
-                { tags: { $regex: trimmed, $options: "i" } }
+                { tags: { $regex: trimmed, $options: "i" } },
+                { embedId: { $regex: trimmed, $options: "i" } }
             ];
         }
 
@@ -171,7 +171,7 @@ exports.getCountByVideoId = async (req, res) => {
 
         // Build filter
         let filter = {
-            videoId: { $ne: null} // Exclude null or empty videoId
+            videoId: { $nin: [null, " "] }
         };
 
         // Search filter
