@@ -6,6 +6,7 @@ router.post('/', analyticsController.createAnalytics);
 router.get('/', analyticsController.getAllAnalytics);
 router.get('/summary/views-by-country', analyticsController.getViewsByCountry);
 router.get('/summary/count-by-embedId', analyticsController.getCountByEmbedId);
+router.get('/summary/count-by-videoId', analyticsController.getCountByVideoId);
 router.put('/:id', analyticsController.updateAnalytics);
 router.delete('/:id', analyticsController.deleteAnalytics);
 

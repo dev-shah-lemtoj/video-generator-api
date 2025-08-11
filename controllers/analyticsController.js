@@ -164,4 +164,55 @@ exports.getCountByEmbedId = async (req, res) => {
     }
 };
 
+// SUMMARY: Total views by Video ID + Widget ID + Site ID + Site Name with filters
+exports.getCountByVideoId = async (req, res) => {
+    try {
+        const { search, startDate, endDate } = req.query;
 
+        // Build filter
+        let filter = {};
+
+        // Search filter (similar to getAllAnalytics)
+        if (search) {
+            const trimmed = search.trim();
+            filter.$or = [
+                { siteName: { $regex: trimmed, $options: "i" } },
+                { widgetName: { $regex: trimmed, $options: "i" } },
+                { eventType: { $regex: trimmed, $options: "i" } },
+                { category: { $regex: trimmed, $options: "i" } },
+                { country: { $regex: trimmed, $options: "i" } },
+                { tags: { $regex: trimmed, $options: "i" } },
+                { videoId: { $regex: trimmed, $options: "i" } },
+                { siteId: { $regex: trimmed, $options: "i" } }
+            ];
+        }
+
+        // Date range filter
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = new Date(startDate);
+            if (endDate) filter.createdAt.$lte = new Date(endDate);
+        }
+
+        const summary = await Analytics.aggregate([
+            { $match: filter },
+            {
+                $group: {
+                    _id: {
+                        siteId: "$siteId",
+                        siteName: "$siteName",
+                        videoId: "$videoId",
+                        widgetId: "$widgetId",
+                        widgetName: "$widgetName"
+                    },
+                    totalViews: { $sum: "$viewCount" }
+                }
+            },
+            { $sort: { totalViews: -1 } }
+        ]);
+
+        res.json(summary);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
