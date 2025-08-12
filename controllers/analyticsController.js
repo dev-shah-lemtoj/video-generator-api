@@ -122,7 +122,7 @@ exports.getCountByEmbedId = async (req, res) => {
         // Build filter
         let filter = {};
 
-        // Search filter (similar to getAllAnalytics)
+        // Search filter
         if (search) {
             const trimmed = search.trim();
             filter.$or = [
@@ -143,6 +143,7 @@ exports.getCountByEmbedId = async (req, res) => {
             if (endDate) filter.createdAt.$lte = new Date(endDate);
         }
 
+        // Per-embedId summary
         const summary = await Analytics.aggregate([
             { $match: filter },
             {
@@ -158,7 +159,13 @@ exports.getCountByEmbedId = async (req, res) => {
             { $sort: { totalViews: -1 } }
         ]);
 
-        res.json(summary);
+        // Calculate grand total
+        const grandTotal = summary.reduce((sum, item) => sum + (item.totalViews || 0), 0);
+
+        res.json({
+            perEmbed: summary,
+            grandTotal
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -169,7 +176,7 @@ exports.getCountByVideoId = async (req, res) => {
     try {
         const { search, startDate, endDate } = req.query;
 
-        // Build filter
+        // Build filter - exclude null or empty videoId
         let filter = {
             videoId: { $nin: [null, " "] }
         };
@@ -196,6 +203,7 @@ exports.getCountByVideoId = async (req, res) => {
             if (endDate) filter.createdAt.$lte = new Date(endDate);
         }
 
+        // Aggregate by videoId
         const summary = await Analytics.aggregate([
             { $match: filter },
             {
@@ -213,7 +221,13 @@ exports.getCountByVideoId = async (req, res) => {
             { $sort: { totalViews: -1 } }
         ]);
 
-        res.json(summary);
+        // Calculate grand total
+        const grandTotal = summary.reduce((sum, item) => sum + (item.totalViews || 0), 0);
+
+        res.json({
+            perVideo: summary,
+            grandTotal
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
