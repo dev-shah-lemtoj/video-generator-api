@@ -212,6 +212,7 @@ exports.getCountByVideoId = async (req, res) => {
                         siteId: "$siteId",
                         siteName: "$siteName",
                         videoId: "$videoId",
+                        videoName: "$videoName", // ✅ add this
                         widgetId: "$widgetId",
                         widgetName: "$widgetName"
                     },

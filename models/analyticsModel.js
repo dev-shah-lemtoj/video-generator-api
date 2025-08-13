@@ -5,6 +5,7 @@ const analyticsSchema = new mongoose.Schema({
     siteId: { type: String, required: true },
     embedId: { type: String, required: true },
     videoId: String,
+    videoName: { type: String, required: false },
     eventType: { type: String, required: true },
     channel: String,
     category: String,
@@ -20,6 +21,6 @@ const analyticsSchema = new mongoose.Schema({
     state: String,
     ipAddress: String,
     lastViewedAt: Date
-}, { timestamps: true }); // Auto-created createdAt & updatedAt
+}, { timestamps: true, strict: false }); // <-- Added strict: false to allow dynamic fields
 
 module.exports = mongoose.model('Analytics', analyticsSchema);
