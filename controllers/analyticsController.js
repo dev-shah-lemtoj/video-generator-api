@@ -178,7 +178,8 @@ exports.getCountByVideoId = async (req, res) => {
 
         // Build filter - exclude null or empty videoId
         let filter = {
-            videoId: { $nin: [null, " "] }
+            videoId: { $nin: [null, " "] },
+            videoName: { $nin: [null, " "] }
         };
 
         // Search filter
@@ -192,7 +193,8 @@ exports.getCountByVideoId = async (req, res) => {
                 { country: { $regex: trimmed, $options: "i" } },
                 { tags: { $regex: trimmed, $options: "i" } },
                 { videoId: { $regex: trimmed, $options: "i" } },
-                { siteId: { $regex: trimmed, $options: "i" } }
+                { siteId: { $regex: trimmed, $options: "i" } },
+                { videoName: { $regex: trimmed, $options: "i" } }
             ];
         }
 
