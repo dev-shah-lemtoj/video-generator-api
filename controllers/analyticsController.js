@@ -114,10 +114,15 @@ exports.deleteAnalytics = async (req, res) => {
     }
 };
 
-// SUMMARY: Total views by Embed ID + Widget ID with filters
+// SUMMARY: Total views by Embed ID + Widget ID with filters + pagination
 exports.getCountByEmbedId = async (req, res) => {
     try {
-        const { search, startDate, endDate } = req.query;
+        const { search, startDate, endDate, page = 1, limit = 10 } = req.query;
+
+        // Parse pagination params
+        const pageNum = parseInt(page, 10);
+        const pageSize = parseInt(limit, 10);
+        const skip = (pageNum - 1) * pageSize;
 
         // Build filter
         let filter = {};
@@ -143,7 +148,26 @@ exports.getCountByEmbedId = async (req, res) => {
             if (endDate) filter.createdAt.$lte = new Date(endDate);
         }
 
-        // Per-embedId summary
+        // Get total count (without pagination)
+        const totalSummary = await Analytics.aggregate([
+            { $match: filter },
+            {
+                $group: {
+                    _id: {
+                        embedId: "$embedId",
+                        widgetId: "$widgetId",
+                        widgetName: "$widgetName"
+                    },
+                    totalViews: { $sum: "$viewCount" }
+                }
+            }
+        ]);
+
+        const totalRecords = totalSummary.length; // total groups
+        const uniqueEmbedCount = new Set(totalSummary.map(item => item._id.embedId)).size;
+        const grandTotal = totalSummary.reduce((sum, item) => sum + (item.totalViews || 0), 0);
+
+        // Apply pagination
         const summary = await Analytics.aggregate([
             { $match: filter },
             {
@@ -156,15 +180,21 @@ exports.getCountByEmbedId = async (req, res) => {
                     totalViews: { $sum: "$viewCount" }
                 }
             },
-            { $sort: { totalViews: -1 } }
+            { $sort: { totalViews: -1 } },
+            { $skip: skip },
+            { $limit: pageSize }
         ]);
-
-        // Calculate grand total
-        const grandTotal = summary.reduce((sum, item) => sum + (item.totalViews || 0), 0);
 
         res.json({
             perEmbed: summary,
-            grandTotal
+            pagination: {
+                page: pageNum,
+                limit: pageSize,
+                totalRecords,
+                totalPages: Math.ceil(totalRecords / pageSize)
+            },
+            grandTotal,
+            uniqueEmbedCount
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
